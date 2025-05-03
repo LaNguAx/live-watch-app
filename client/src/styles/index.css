@@ -1,0 +1,7 @@
+@import './fonts.css';
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Poppins', 'serif';
+  --font-primary: 'Roboto', 'sans-serif';
+}
