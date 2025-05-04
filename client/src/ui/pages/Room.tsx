@@ -1,7 +1,8 @@
-import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useSocket } from '../../hooks/useSocket';
-import { useEffect } from 'react';
-import { useAppSelector } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { exitRoom } from '../../store/slices/roomSlice';
 
 function Room() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -9,16 +10,32 @@ function Room() {
 
   const { socket, emit } = useSocket(roomId);
 
-  const { users } = useAppSelector((store) => store.room);
+  // const [in, setIn] = useState('');
 
-  useEffect(() => {
-    emit('get-users-in-room', { roomId });
-  }, []);
+  const navigate = useNavigate();
+
+  const room = useAppSelector((store) => store.room);
+  const dispatch = useAppDispatch();
+
+  function handleBackToHome() {
+    // the navigate also disconnects the socket and triggers the user removal from room in server
+    navigate('/');
+    dispatch(exitRoom());
+  }
+
+  function submitChat(e) {
+    e.preventDefault();
+  }
 
   return (
     <div className="p-6">
       <h2 className="text-xl font-semibold">Room ID: {roomId}</h2>
-      Users: {users}
+      <button onClick={handleBackToHome}>Back to home</button>
+      Users: {room.users}
+      <form action="">
+        {/* <input type="text" onChange={(e) => setIn(e.target.value)} /> */}
+        <button onClick={submitChat}>submit chat</button>
+      </form>
     </div>
   );
 }

@@ -14,7 +14,7 @@ export default function setupSocketHandlers(io) {
       }
       room.add(socket.id);
 
-      io.in(roomId).emit("get-users-in-room", { roomId, users: Array.from(room) });
+      io.in(roomId).emit("update-room", { roomId, users: Array.from(room) });
       console.log(
         "1️⃣ Rooms After Connect :",
         Array.from(rooms.entries()).map(([roomId, socketSet]) => ({
@@ -25,7 +25,7 @@ export default function setupSocketHandlers(io) {
     });
 
     socket.on("leave-room", ({ roomId }, ack) => {
-      console.log("leaving");
+      console.log('Leave room handler..');
       ack && ack();
     });
 
@@ -35,12 +35,15 @@ export default function setupSocketHandlers(io) {
       for (const roomId of socket.rooms) {
         if (roomId === socket.id) continue;
 
-        socket.leave(roomId);
 
         const room = rooms.get(roomId);
         if (room) room.delete(socket.id);
+        if (room.size === 0)
+          rooms.delete(roomId);
 
-        socket.in(roomId).emit("get-users-in-room", { roomId, users: Array.from(room) });
+        socket.in(roomId).emit("update-room", { roomId, users: Array.from(room) });
+        socket.leave(roomId);
+
       }
       console.log(
         "2️⃣ Rooms After Disconnect :",
