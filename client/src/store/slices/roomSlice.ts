@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { createAction } from '@reduxjs/toolkit';
 import { IUser } from './userSlice';
 
 interface IVideo {
@@ -12,56 +11,32 @@ interface IVideo {
 interface IRoom {
   roomId: string;
   users: IUser[];
-  video: IVideo;
+  chat: string[];
   status: 'waiting' | 'active';
 }
 
 const initialState: IRoom = {
   roomId: '',
   users: [],
-  video: {
-    id: '',
-    isPlaying: false,
-    currentTime: 0,
-    syncedBy: undefined,
-  },
   status: 'waiting',
+  chat: [],
 };
 
 const roomSlice = createSlice({
   name: 'room',
   initialState,
   reducers: {
-    createRoom(state, action: PayloadAction<IRoom>) {
+    updateRoom(_state, action: PayloadAction<IRoom>) {
       return action.payload;
     },
-    setUsers(state, action: PayloadAction<IUser[]>) {
-      state.users = action.payload;
+    exitRoom(_state) {
+      return initialState;
     },
-    syncVideo(
-      state,
-      action: PayloadAction<{
-        id: string;
-        isPlaying: boolean;
-        currentTime: number;
-        syncedBy?: string;
-      }>
-    ) {
-      state.video = action.payload;
+    sendMessageToRoom(state, action: PayloadAction<string>) {
+      state.chat.push(action.payload);
     },
   },
 });
 
-export const joinRoom = createAction<{ roomId: string; user: IUser }>(
-  'socket/joinRoom'
-);
-export const leaveRoom = createAction('socket/leaveRoom');
-export const sendVideoState = createAction<{
-  id: string;
-  isPlaying: boolean;
-  currentTime: number;
-  syncedBy?: string;
-}>('socket/sendVideoState');
-
-export const { createRoom, setUsers, syncVideo } = roomSlice.actions;
+export const { exitRoom, updateRoom, sendMessageToRoom } = roomSlice.actions;
 export default roomSlice.reducer;
