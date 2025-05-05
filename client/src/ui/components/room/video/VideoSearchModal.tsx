@@ -1,5 +1,4 @@
 import { Box, Modal } from '@mui/material';
-import Button from '../../Button';
 import { Dispatch, ReactNode, SetStateAction } from 'react';
 
 interface VideoSearchModalProps {

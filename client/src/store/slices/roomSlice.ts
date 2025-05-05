@@ -1,13 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IUser } from './userSlice';
 
-interface IVideo {
-  id: string;
-  isPlaying: boolean;
-  currentTime: number;
-  syncedBy?: string;
-}
-
 interface IRoom {
   roomId: string;
   users: Record<string, IUser>;
