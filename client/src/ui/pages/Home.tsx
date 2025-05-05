@@ -1,9 +1,19 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import Button from '../components/Button';
+import Input from '../components/Input';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { setName } from '../../store/slices/userSlice';
 
 function Home() {
   const [roomId, setRoomId] = useState('');
   const navigate = useNavigate();
+
+  const [text, setText] = useState('');
+
+  const dispatch = useAppDispatch();
+
+  const name = useAppSelector((store) => store.user.name);
 
   const handleJoin = () => {
     if (roomId.trim()) {
@@ -67,7 +77,21 @@ function Home() {
               <a href="#">GitHub</a>
             </li>
           </ul>
-
+          <div className="space-x-2">
+            <Input
+              value={text}
+              placeholder="Write name here"
+              className="w-full sm:w-56 border px-4 py-2 rounded-full text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              onChange={(e) => setText(e.target.value)}
+            />
+            <Button
+              onClick={() => {
+                dispatch(setName(text));
+              }}
+            >
+              Update Name
+            </Button>
+          </div>
           <p className="mt-6 sm:mt-0 text-xs text-gray-400">
             Built with ❤️ for movie lovers
           </p>

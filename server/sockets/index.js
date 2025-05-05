@@ -10,7 +10,7 @@ export default function setupSocketHandlers(io) {
 
   // Create a fresh room state
   function createRoomState() {
-    return { users: new Set(), chat: [], status: "waiting" };
+    return { users: new Map(), chat: [], status: "waiting" };
   }
 
   // ── Adapter events keep rooms Map in sync ─────────────────────
@@ -24,23 +24,30 @@ export default function setupSocketHandlers(io) {
 
   adapter.on("join-room", (room, id) => {
     if (!isAppRoom(room)) return;
-    const state = rooms.get(room) || createRoomState();
-    state.users.add(id);
-    rooms.set(room, state);
-    console.log(`✔️  Socket ${id} joined ${room}`, Array.from(state.users));
+
+    // I need to add it in join-room event then socket.join(id);
+    // const state = rooms.get(room) || createRoomState();
+    // state.users.add(id);
+    // rooms.set(room, state);
+    const state = rooms.get(room);
+    console.log(`✔️  Socket ${id} joined ${room} --> `, state);
   });
 
   adapter.on("leave-room", (room, id) => {
     if (!isAppRoom(room)) return;
     const state = rooms.get(room);
     if (!state) return;
+
+    // I need to first leave the user using leave-room event then socket.leave(id);
+    // state.users.delete(id);
     state.users.delete(id);
 
     if (state.users.size === 0) {
       rooms.delete(room);
       console.log("🗑️ App room deleted (empty):", room);
+      console.error(rooms);
     } else {
-      console.log(`❌  Socket ${id} left ${room}`, Array.from(state.users));
+      console.log(`❌  Socket ${id} left ${room}`, state.users);
     }
   });
 
@@ -55,14 +62,20 @@ export default function setupSocketHandlers(io) {
     console.log("🔗 Connected:", socket.id);
 
     socket.on("join-room", ({ roomId, user }) => {
+      // const { name } = user;
+      // Add user to rooms cache
+      const state = rooms.get(roomId) || createRoomState();
+      state.users.set(socket.id, user);
+      rooms.set(roomId, state);
+
       // join the Socket.IO room (Adapter events handle rooms Map)
       socket.join(roomId);
 
       // immediately broadcast the full room state
-      const state = rooms.get(roomId) || createRoomState();
+      // const state = rooms.get(roomId) || createRoomState();
       io.in(roomId).emit("update-room", {
         roomId,
-        users: Array.from(state.users),
+        users: Object.fromEntries(state.users),
         chat: state.chat,
         status: state.status,
       });
@@ -92,7 +105,7 @@ export default function setupSocketHandlers(io) {
       if (state) {
         io.in(roomId).emit("update-room", {
           roomId,
-          users: Array.from(state.users),
+          users: Object.fromEntries(state.users),
           chat: state.chat,
           status: state.status,
         });
@@ -104,6 +117,27 @@ export default function setupSocketHandlers(io) {
     socket.on("disconnecting", () => {
       console.log("⚠️  Disconnecting:", socket.id);
       // Adapter will handle the leave-room/delete-room events automatically
+
+      // If user exits the browser tab then leave-room would not be fired, so the same code to emit to everyone in the room that users changed should be here aswell.
+
+      for (const roomId of socket.rooms) {
+        // if the room is user's socket
+        if (roomId === socket.id) continue;
+
+        // this'll update the rooms state in cache
+        socket.leave(roomId);
+
+        // broadcast updated state to remaining clients
+        const state = rooms.get(roomId);
+        if (state) {
+          io.in(roomId).emit("update-room", {
+            roomId,
+            users: state.users,
+            chat: state.chat,
+            status: state.status,
+          });
+        }
+      }
     });
 
     socket.on("disconnect", () => {
