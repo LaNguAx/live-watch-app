@@ -8,6 +8,12 @@ import {
 } from '../store/slices/roomSlice';
 import { IUser } from '../store/slices/userSlice';
 
+export type EmitFunction = <T = any>(
+  event: string,
+  payload?: T,
+  callback?: () => void
+) => void;
+
 export function useSocket(roomId: string) {
   const socketRef = useRef<Socket>(socket);
   const dispatch = useAppDispatch();
@@ -20,10 +26,11 @@ export function useSocket(roomId: string) {
       status,
     }: {
       roomId: string;
-      users: IUser[];
+      users: Record<string, IUser>;
       chat: string[];
       status: 'waiting' | 'active';
     }) => {
+      console.log(roomId, users, status, chat);
       dispatch(updateUserRoom({ roomId, users, status, chat }));
     },
     []
@@ -47,9 +54,9 @@ export function useSocket(roomId: string) {
     ref.off('send-message', sendMessage);
   }, []);
 
-  const socketDispatcher = useCallback(
-    (action: any, payload?: any, retHandler?: () => void) => {
-      socket.emit(action, payload, retHandler);
+  const socketDispatcher: EmitFunction = useCallback(
+    (event, payload, callback) => {
+      socket.emit(event, payload, callback);
     },
     []
   );
@@ -68,12 +75,10 @@ export function useSocket(roomId: string) {
   useEffect(() => {
     startListeners();
 
-    socketDispatcher('join-room', { roomId });
-
     return () => {
       stopListeners();
     };
-  }, []);
+  }, [roomId]);
 
   return { socket: socketRef.current, emit: socketDispatcher };
 }

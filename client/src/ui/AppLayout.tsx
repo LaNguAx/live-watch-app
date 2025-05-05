@@ -1,13 +1,13 @@
 import { Outlet } from 'react-router-dom';
-// import ConnectionHandler from './components/ConnectionHandler';
 
 export default function AppLayout() {
   return (
-    <div className="h-screen w-screen">
-      <main className="w-full h-full">
-        <Outlet />
-      </main>
-      {/* <ConnectionHandler /> */}
+    <div className="grid h-screen grid-rows-[auto_1fr_auto] ">
+      <div className="overflow-y-auto">
+        <main className="mx-auto max-w-6xl">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

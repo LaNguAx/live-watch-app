@@ -10,14 +10,14 @@ interface IVideo {
 
 interface IRoom {
   roomId: string;
-  users: IUser[];
+  users: Record<string, IUser>;
   chat: string[];
   status: 'waiting' | 'active';
 }
 
 const initialState: IRoom = {
   roomId: '',
-  users: [],
+  users: {},
   status: 'waiting',
   chat: [],
 };
