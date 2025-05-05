@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import Button from '../components/Button';
 import Input from '../components/Input';
-import { useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { setName } from '../../store/slices/userSlice';
 
 function Home() {
@@ -12,6 +12,8 @@ function Home() {
   const [text, setText] = useState('');
 
   const dispatch = useAppDispatch();
+
+  const name = useAppSelector((store) => store.user.name);
 
   const handleJoin = () => {
     if (roomId.trim()) {
@@ -37,6 +39,7 @@ function Home() {
             synced videos like you're all in the same room — no matter where you
             are.
           </p>
+          <h4>Your name is {name ?? '?'}</h4>
 
           <div className="mt-10 flex flex-col sm:flex-row sm:justify-center sm:items-center gap-4">
             <button
