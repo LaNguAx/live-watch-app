@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import Button from '../components/Button';
 import Input from '../components/Input';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { useAppDispatch } from '../../store/hooks';
 import { setName } from '../../store/slices/userSlice';
 
 function Home() {
