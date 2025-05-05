@@ -13,8 +13,6 @@ function Home() {
 
   const dispatch = useAppDispatch();
 
-  const name = useAppSelector((store) => store.user.name);
-
   const handleJoin = () => {
     if (roomId.trim()) {
       navigate(`/room/${roomId}`);

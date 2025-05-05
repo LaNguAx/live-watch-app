@@ -4,7 +4,6 @@ import { useSocket } from '../../hooks/useSocket';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { exitRoom } from '../../store/slices/roomSlice';
 
-import { Modal, Box, Typography } from '@mui/material';
 import VideoSearchModal from '../components/room/video/VideoSearchModal';
 import Layout from '../components/room/Layout';
 import VideoPlayer from '../components/room/video/VideoPlayer';
