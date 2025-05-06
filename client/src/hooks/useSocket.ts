@@ -7,6 +7,7 @@ import {
   updateRoom as updateUserRoom,
 } from '../store/slices/roomSlice';
 import { IUser } from '../store/slices/userSlice';
+import { Message } from '../store/slices/roomSlice';
 
 export type EmitFunction = <T = any>(
   event: string,
@@ -27,7 +28,7 @@ export function useSocket(roomId: string) {
     }: {
       roomId: string;
       users: Record<string, IUser>;
-      chat: string[];
+      chat: Message[];
       status: 'waiting' | 'active';
     }) => {
       console.log(roomId, users, status, chat);
@@ -36,7 +37,7 @@ export function useSocket(roomId: string) {
     []
   );
 
-  const sendMessage = useCallback(({ message }: { message: string }) => {
+  const sendMessage = useCallback(({ message }: { message: Message }) => {
     dispatch(sendMessageToRoom(message));
   }, []);
 
