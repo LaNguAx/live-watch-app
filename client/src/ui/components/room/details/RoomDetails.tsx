@@ -5,5 +5,7 @@ interface RoomDetailsProps {
 }
 
 export default function RoomDetails({ children }: RoomDetailsProps) {
-  return <div className="max-w-lg md:max-w-none h-fit">{children}</div>;
+  return (
+    <div className="max-w-lg md:max-w-none h-fit text-2xl">{children}</div>
+  );
 }

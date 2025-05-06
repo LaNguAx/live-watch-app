@@ -19,12 +19,12 @@ export default function VideoSearchBar({ handleSearch }: VideoSearchBarProps) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Search for a video"
-        className="text-xs w-full rounded-full border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="text-lg w-full rounded-full border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
 
       <Button
         type="submit"
-        className="cursor-pointer w-fit rounded-full bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700 transition"
+        className="cursor-pointer w-fit rounded-full bg-indigo-600 px-4 py-2 text-lg font-medium text-white hover:bg-indigo-700 transition"
       >
         Search
       </Button>
