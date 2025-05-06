@@ -84,8 +84,23 @@ export default function setupSocketHandlers(io) {
     socket.on("send-message", ({ roomId, message }) => {
       const state = rooms.get(roomId);
       if (!state) return;
-      state.chat.push(message);
-      io.in(roomId).emit("send-message", { message });
+
+      function getUserFromSocket(room, socketId) {
+        const user = room.users.get(socketId);
+        if (!user) return;
+
+        return user.name;
+      }
+
+      const returnMessage = {
+        user: getUserFromSocket(state, socket.id),
+        message,
+      };
+
+      state.chat.push(returnMessage);
+      io.in(roomId).emit("send-message", { message: returnMessage });
+
+      console.log(state.chat);
     });
 
     // socket.on("get-users-in-room", ({ roomId }) => {

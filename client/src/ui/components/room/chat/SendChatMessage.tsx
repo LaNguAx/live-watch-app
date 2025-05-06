@@ -17,7 +17,6 @@ export default function SendChatMessage({
   function handleSendChatMessage(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!text.trim()) return;
-    console.log(text);
 
     emit('send-message', { roomId: toChatRoom, message: text });
 

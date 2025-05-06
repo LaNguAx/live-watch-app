@@ -1,10 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IUser } from './userSlice';
 
+export type Message = {
+  user: string;
+  message: string;
+};
+
+export type Chat = Message[];
+
 interface IRoom {
   roomId: string;
   users: Record<string, IUser>;
-  chat: string[];
+  chat: Chat;
   status: 'waiting' | 'active';
 }
 
@@ -25,7 +32,7 @@ const roomSlice = createSlice({
     exitRoom(_state) {
       return initialState;
     },
-    sendMessageToRoom(state, action: PayloadAction<string>) {
+    sendMessageToRoom(state, action: PayloadAction<Message>) {
       state.chat.push(action.payload);
     },
   },
