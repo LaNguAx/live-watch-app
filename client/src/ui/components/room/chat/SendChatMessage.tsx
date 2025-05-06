@@ -31,11 +31,11 @@ export default function SendChatMessage({
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Type a message..."
-        className="w-full rounded-full border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs"
+        className="w-full  rounded-full border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-lg"
       />
       <Button
         type="submit"
-        className="cursor-pointer w-fit rounded-full bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 transition text-xs"
+        className="cursor-pointer w-fit rounded-full bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 transition text-lg"
       >
         Send
       </Button>

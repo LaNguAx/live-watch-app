@@ -6,19 +6,28 @@ export default function Chat() {
 
   const userNames = Object.values(users).map(({ name }, _i) => (
     <span key={_i}>
-      <span>{name}</span>
+      🧑&nbsp;<span>{name}</span>
       <br />
     </span>
   ));
 
   return (
-    <article className="flex flex-col justify-between rounded-[10px] border border-gray-200 bg-white px-3 py-2 h-60 sm:h-96 overflow-y-auto">
-      <p className="text-[0.65rem] font-light">
-        <span className="text-xs font-medium mr-2">User 1:</span>
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Aspernatur,
-        expedita. {chat}
-      </p>
-      <p className="text-xs">{userNames}</p>
+    <article className="relative w-full flex flex-col justify-between rounded-[10px] border border-gray-200 bg-white h-80 sm:h-96 overflow-hidden">
+      <div className="overflow-y-auto px-3 py-2 flex-1">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <p className="text-lg font-light">
+            <span className="font-medium mr-2">User 1:</span>
+            <span>text here</span>
+          </p>
+        ))}
+      </div>
+      <div className="w-full px-2 py-1 border-t bg-white border-gray-200 ">
+        <p className="text-md">
+          <strong>Connected Users:</strong>
+          <br />
+          {userNames}
+        </p>
+      </div>
     </article>
   );
 }

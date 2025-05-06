@@ -132,7 +132,7 @@ export default function setupSocketHandlers(io) {
         if (state) {
           io.in(roomId).emit("update-room", {
             roomId,
-            users: state.users,
+            users: Object.fromEntries(state.users),
             chat: state.chat,
             status: state.status,
           });

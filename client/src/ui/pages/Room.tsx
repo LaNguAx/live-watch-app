@@ -47,7 +47,7 @@ function Room() {
   }
 
   return (
-    <section className="bg-white min-h-screen flex items-center p-3 sm:p-1">
+    <section className="relative bg-white h-screen w-screen p-2">
       <VideoSearchModal openModal={openModal} setOpenModal={setOpenModal}>
         <Button type="button" onClick={() => setOpenModal(false)}>
           Close
@@ -67,12 +67,14 @@ function Room() {
           <Chat />
           <SendChatMessage toChatRoom={roomId} emitter={emit} />
 
-          <Button
-            onClick={handleLeaveRoom}
-            className="cursor-pointer w-full rounded-full border border-red-500 px-4 py-2 text-red-500 hover:bg-red-500 hover:text-white transition text-xs"
-          >
-            Leave Room
-          </Button>
+          <div className="absolute bottom-4 left-0 w-full flex justify-center px-2">
+            <Button
+              onClick={handleLeaveRoom}
+              className=" cursor-pointer w-full rounded-full border border-red-500 px-4 py-2 text-red-500 hover:bg-red-500 hover:text-white transition text-lg mt-auto"
+            >
+              Leave Room
+            </Button>
+          </div>
         </SideBar>
       </Layout>
     </section>

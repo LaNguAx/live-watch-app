@@ -2,9 +2,9 @@ import { Outlet } from 'react-router-dom';
 
 export default function AppLayout() {
   return (
-    <div className="grid h-screen grid-rows-[auto_1fr_auto] ">
+    <div className="h-screen w-screen ">
       <div className="overflow-y-auto">
-        <main className="mx-auto max-w-6xl">
+        <main className="mx-auto max-w-7xl sm:max-w-7xl">
           <Outlet />
         </main>
       </div>
