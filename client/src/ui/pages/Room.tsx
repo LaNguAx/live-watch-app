@@ -67,14 +67,12 @@ function Room() {
           <Chat />
           <SendChatMessage toChatRoom={roomId} emitter={emit} />
 
-          <div className="absolute bottom-4 left-0 w-full flex justify-center px-2">
-            <Button
-              onClick={handleLeaveRoom}
-              className=" cursor-pointer w-full rounded-full border border-red-500 px-4 py-2 text-red-500 hover:bg-red-500 hover:text-white transition text-lg mt-auto"
-            >
-              Leave Room
-            </Button>
-          </div>
+          <Button
+            onClick={handleLeaveRoom}
+            className=" cursor-pointer w-full rounded-full border border-red-500 px-4 py-2 text-red-500 hover:bg-red-500 hover:text-white transition text-lg mt-auto"
+          >
+            Leave Room
+          </Button>
         </SideBar>
       </Layout>
     </section>

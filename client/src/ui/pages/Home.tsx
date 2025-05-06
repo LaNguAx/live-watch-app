@@ -65,7 +65,7 @@ function Home() {
           </div>
         </div>
 
-        <div className="space-x-2 space-y-4 mx-auto mt-28 text-center">
+        <div className="space-x-2 space-y-4 mx-auto mt-6 text-center">
           <h4 className="text-xl">
             Hi, Your name is <strong>{name ?? '?'}</strong>
           </h4>
@@ -73,7 +73,7 @@ function Home() {
             <Input
               value={text}
               placeholder="Enter Your Name"
-              className="w-fit sm:w-56  border px-4 py-2 rounded-full text-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-fit sm:w-56  border px-4 py-2 rounded-full text-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onChange={(e) => setText(e.target.value)}
             />
             <Button
@@ -86,8 +86,8 @@ function Home() {
             </Button>
           </div>
         </div>
-        <div className="mt-auto sm:mt-12 h-fit  flex flex-col gap-7 justify-center items-center sm:flex-row sm:items-center sm:justify-between text-center sm:text-left">
-          <ul className="flex flex-wrap justify-center sm:justify-start gap-4 text-lg text-gray-500">
+        <div className="mt-auto sm:mt-14 h-fit  flex flex-col gap-7 justify-center items-center sm:flex-row sm:items-center sm:justify-between text-center sm:text-left">
+          <ul className="flex flex-wrap justify-center sm:justify-start gap-2 text-lg text-gray-500">
             <li>
               <a
                 href="#"
