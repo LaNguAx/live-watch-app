@@ -11,7 +11,6 @@ export default function Chat() {
       <br />
     </span>
   ));
-  console.log(chat);
   return (
     <article className="relative w-full flex flex-col justify-between rounded-[10px] border border-gray-200 bg-white h-80 sm:h-96 overflow-hidden">
       <div className="overflow-y-auto px-3 py-2 flex-1">

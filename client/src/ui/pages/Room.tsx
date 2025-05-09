@@ -48,8 +48,12 @@ function Room() {
 
   return (
     <section className="relative bg-white h-screen w-screen p-2">
-      <VideoSearchModal openModal={openModal} setOpenModal={setOpenModal}>
-        <Button type="button" onClick={() => setOpenModal(false)}>
+      <VideoSearchModal openModal={openModal} setOpenModal={setOpenModal} emitter={emit}>
+        <Button
+          className="cursor-pointer rounded-full bg-indigo-600 px-4 py-4 text-3xl w-9/12 font-medium text-white hover:bg-indigo-700 transition absolute bottom-3 left-1/2 transform -translate-x-1/2"
+          type="button"
+          onClick={() => setOpenModal(false)}
+        >
           Close
         </Button>
       </VideoSearchModal>
@@ -60,8 +64,7 @@ function Room() {
         <SideBar>
           <RoomDetails>
             <RoomHeader roomId={roomId} />
-
-            <VideoSearchBar handleSearch={handleSearch} />
+            <VideoSearchBar handleSearchModal={handleSearch} />
           </RoomDetails>
 
           <Chat />

@@ -4,10 +4,13 @@ import { Socket } from 'socket.io-client';
 import { useAppDispatch } from '../store/hooks';
 import {
   sendMessageToRoom,
+  setVideo,
   updateRoom as updateUserRoom,
+  Video,
 } from '../store/slices/roomSlice';
 import { IUser } from '../store/slices/userSlice';
 import { Message } from '../store/slices/roomSlice';
+import { initialState } from '../store/slices/roomSlice';
 
 export type EmitFunction = <T = any>(
   event: string,
@@ -32,7 +35,9 @@ export function useSocket(roomId: string) {
       status: 'waiting' | 'active';
     }) => {
       console.log(roomId, users, status, chat);
-      dispatch(updateUserRoom({ roomId, users, status, chat }));
+      dispatch(
+        updateUserRoom({ ...initialState, roomId, users, status, chat })
+      );
     },
     []
   );
@@ -41,11 +46,16 @@ export function useSocket(roomId: string) {
     dispatch(sendMessageToRoom(message));
   }, []);
 
+  const setRoomVideo = useCallback(({ video }: { video: Video }) => {
+    dispatch(setVideo(video));
+  }, []);
+
   const startListeners = useCallback(() => {
     const { current: ref } = socketRef;
 
     ref.on('update-room', updateRoom);
     ref.on('send-message', sendMessage);
+    ref.on('set-room-video', setRoomVideo);
   }, []);
 
   const stopListeners = useCallback(() => {
@@ -53,6 +63,7 @@ export function useSocket(roomId: string) {
 
     ref.off('update-room', updateRoom);
     ref.off('send-message', sendMessage);
+    ref.off('set-room-video', setRoomVideo);
   }, []);
 
   const socketDispatcher: EmitFunction = useCallback(

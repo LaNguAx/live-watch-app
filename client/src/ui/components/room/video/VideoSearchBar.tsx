@@ -1,23 +1,53 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useRef, useState } from 'react';
 import Button from '../../Button';
 import Input from '../../Input';
+import { useSearchVideos } from '../../../../hooks/useSearchVideos';
+import { useAppDispatch } from '../../../../store/hooks';
+import {
+  setSearchQuery,
+  setSearchVideos,
+} from '../../../../store/slices/roomSlice';
 
 interface VideoSearchBarProps {
-  handleSearch: (e: FormEvent<HTMLFormElement>) => void;
+  handleSearchModal: (e: FormEvent<HTMLFormElement>) => void;
 }
 
-export default function VideoSearchBar({ handleSearch }: VideoSearchBarProps) {
-  const [text, setText] = useState('');
+export default function VideoSearchBar({
+  handleSearchModal: openSearchModal,
+}: VideoSearchBarProps) {
+  const [query, setQuery] = useState('');
+  const dispatch = useAppDispatch();
+
+  const prevQuery = useRef('');
+
+  const { refetch } = useSearchVideos(query);
+
+  async function handleFormSubmit(
+    e: FormEvent<HTMLFormElement>
+  ): Promise<void> {
+    e.preventDefault();
+    openSearchModal(e);
+
+    if (query.trim() === '' || query === prevQuery.current) return;
+    dispatch(setSearchQuery(query));
+
+    const result = await refetch();
+
+    if (result.status === 'success' && result.data) {
+      prevQuery.current = query;
+      dispatch(setSearchVideos(result.data));
+    }
+  }
 
   return (
     <form
-      onSubmit={handleSearch}
+      onSubmit={handleFormSubmit}
       className="flex items-center justify-center gap-2 mt-2"
     >
       <Input
         type="text"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
         placeholder="Search for a video"
         className="text-lg w-full rounded-full border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
