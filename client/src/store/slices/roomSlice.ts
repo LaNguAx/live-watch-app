@@ -8,17 +8,49 @@ export type Message = {
 
 export type Chat = Message[];
 
+export type Video = {
+  id: string;
+  title: string;
+  thumbnail: string;
+  author: string;
+  publishedAt: string;
+  description: string;
+  duration:string;
+  url: string;
+};
+
+type Search = {
+  results: Video[];
+  query: string;
+};
+
 interface IRoom {
   roomId: string;
   users: Record<string, IUser>;
   chat: Chat;
+  search: Search;
+  video: Video;
   status: 'waiting' | 'active';
 }
 
-const initialState: IRoom = {
+export const initialState: IRoom = {
   roomId: '',
   users: {},
   status: 'waiting',
+  search: {
+    results: [],
+    query: '',
+  },
+  video: {
+    id: '',
+    title: '',
+    thumbnail: '',
+    author: '',
+    publishedAt: '',
+    description: '',
+    duration:'',
+    url: '',
+  },
   chat: [],
 };
 
@@ -35,8 +67,24 @@ const roomSlice = createSlice({
     sendMessageToRoom(state, action: PayloadAction<Message>) {
       state.chat.push(action.payload);
     },
+    setSearchVideos(state, action: PayloadAction<Video[]>) {
+      state.search.results = action.payload;
+    },
+    setSearchQuery(state, action: PayloadAction<string>) {
+      state.search.query = action.payload;
+    },
+    setVideo(state, action: PayloadAction<Video>) {
+      state.video = action.payload;
+    },
   },
 });
 
-export const { exitRoom, updateRoom, sendMessageToRoom } = roomSlice.actions;
+export const {
+  exitRoom,
+  updateRoom,
+  sendMessageToRoom,
+  setSearchVideos,
+  setSearchQuery,
+  setVideo,
+} = roomSlice.actions;
 export default roomSlice.reducer;

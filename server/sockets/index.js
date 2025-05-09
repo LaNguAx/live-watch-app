@@ -10,7 +10,21 @@ export default function setupSocketHandlers(io) {
 
   // Create a fresh room state
   function createRoomState() {
-    return { users: new Map(), chat: [], status: "waiting" };
+    return {
+      users: new Map(),
+      chat: [],
+      status: "waiting",
+      video: {
+        id: "",
+        title: "",
+        thumbnail: "",
+        author: "",
+        publishedAt: "",
+        description: "",
+        duration: "",
+        url: "",
+      },
+    };
   }
 
   // ── Adapter events keep rooms Map in sync ─────────────────────
@@ -67,7 +81,7 @@ export default function setupSocketHandlers(io) {
       const state = rooms.get(roomId) || createRoomState();
       state.users.set(socket.id, user);
       rooms.set(roomId, state);
-
+      console.log(state);
       // join the Socket.IO room (Adapter events handle rooms Map)
       socket.join(roomId);
 
@@ -79,6 +93,8 @@ export default function setupSocketHandlers(io) {
         chat: state.chat,
         status: state.status,
       });
+
+      if (state.video.id) io.in(roomId).emit("set-video-room", { video: state.video });
     });
 
     socket.on("send-message", ({ roomId, message }) => {
@@ -123,11 +139,23 @@ export default function setupSocketHandlers(io) {
           users: Object.fromEntries(state.users),
           chat: state.chat,
           status: state.status,
+          video: state.video,
         });
       }
 
+      if (state.video.id) io.in(roomId).emit("set-video-room", { video: state.video });
+
       if (typeof ack === "function") ack();
     });
+
+    /** ROOM HANDLERS START */
+    socket.on("set-room-video", ({ roomId, video }) => {
+      const state = rooms.get(roomId);
+      state.video = { ...video };
+      io.in(roomId).emit("set-room-video", { video });
+    });
+
+    /** ROOM HANDLERS END */
 
     socket.on("disconnecting", () => {
       console.log("⚠️  Disconnecting:", socket.id);
