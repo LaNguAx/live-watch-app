@@ -86,7 +86,7 @@ const roomSlice = createSlice({
       state.video.time = action.payload;
       state.status = 'active';
     },
-    pauseVideo(state, action: PayloadAction<string>) {
+    pauseVideo(state, _action: PayloadAction<string>) {
       state.status = 'waiting';
     },
   },
