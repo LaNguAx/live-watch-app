@@ -21,7 +21,6 @@ export default function VideoCard({
     author,
     description,
     publishedAt,
-    url,
     duration,
   } = video;
 
