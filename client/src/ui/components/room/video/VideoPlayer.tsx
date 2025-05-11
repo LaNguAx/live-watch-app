@@ -30,6 +30,7 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
     if (!videoTime) return;
     isSeekingRef.current = true;
     playerRef.current?.seekTo(videoTime);
+    setSliderPos(videoTime);
   }, [videoTime]);
 
   useEffect(() => {
@@ -53,8 +54,9 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
       const t = playerRef.current?.getCurrentTime?.() ?? 0;
       setSliderPos(t);
     }, 500);
+
     return () => clearInterval(idt);
-  }, []);
+  }, [playerRef.current]);
 
   if (!id) {
     return (
