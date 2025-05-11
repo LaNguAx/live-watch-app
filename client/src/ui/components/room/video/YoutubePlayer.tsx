@@ -5,6 +5,7 @@ export interface YouTubePlayerHandle {
   pause: () => void;
   seekTo: (seconds: number) => void;
   getCurrentTime: () => number;
+  getDuration: () => number;
 }
 
 interface YouTubePlayerProps {
@@ -35,6 +36,7 @@ const YouTubePlayer = forwardRef(function YouTubePlayer(
     pause: () => playerRef.current?.pauseVideo(),
     seekTo: (seconds: number) => playerRef.current?.seekTo(seconds, true),
     getCurrentTime: () => playerRef.current?.getCurrentTime() || 0,
+    getDuration: () => playerRef.current?.getDuration() || 0,
   }));
 
   useEffect(() => {
@@ -54,6 +56,16 @@ const YouTubePlayer = forwardRef(function YouTubePlayer(
         height: '100%',
         width: '100%',
         videoId,
+        playerVars: {
+          controls: 0, // ❌ Hides the player controls (play, pause, etc.)
+          modestbranding: 1, // ✅ Removes the YouTube logo (mostly)
+          rel: 0, // ✅ Prevents showing related videos at the end
+          showinfo: 0, // ✅ Deprecated, no longer needed
+          fs: 0, // ❌ Disable fullscreen button
+          iv_load_policy: 3, // ✅ Hide annotations
+          disablekb: 1, // ✅ Disable keyboard controls
+          mute: 1,
+        },
         events: {
           onReady: () => onReady?.(),
           onStateChange: (event: any) => {

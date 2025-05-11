@@ -31,13 +31,13 @@ export interface IRoom {
   chat: Chat;
   search: Search;
   video: Video;
-  status: 'waiting' | 'active';
+  status: 'waiting' | 'active' | '';
 }
 
 export const initialState: IRoom = {
   roomId: '',
   users: {},
-  status: 'waiting',
+  status: '',
   search: {
     results: [],
     query: '',
@@ -89,6 +89,9 @@ const roomSlice = createSlice({
     pauseVideo(state, _action: PayloadAction<string>) {
       state.status = 'waiting';
     },
+    seekToTime(state, action: PayloadAction<number>) {
+      state.video.time = action.payload;
+    },
   },
 });
 
@@ -101,5 +104,6 @@ export const {
   setVideo,
   playVideo,
   pauseVideo,
+  seekToTime,
 } = roomSlice.actions;
 export default roomSlice.reducer;

@@ -6,6 +6,7 @@ import {
   IRoom,
   pauseVideo,
   playVideo,
+  seekToTime,
   sendMessageToRoom,
   setVideo,
   updateRoom as updateUserRoom,
@@ -66,9 +67,14 @@ export function useSocket(roomId: string) {
     dispatch(setVideo(video));
   }, []);
 
+  const seekRoomVideo = useCallback(({ time }: { time: number }) => {
+    dispatch(seekToTime(time));
+  }, []);
+
   const startListeners = useCallback(() => {
     const { current: ref } = socketRef;
 
+    ref.on('seek-room-video', seekRoomVideo);
     ref.on('play-room-video', playRoomVideo);
     ref.on('pause-room-video', pauseRoomVideo);
     ref.on('end-room-video', endRoomVideo);
@@ -80,6 +86,7 @@ export function useSocket(roomId: string) {
   const stopListeners = useCallback(() => {
     const { current: ref } = socketRef;
 
+    ref.off('seek-room-video', seekRoomVideo);
     ref.off('play-room-video', playRoomVideo);
     ref.off('pause-room-video', pauseRoomVideo);
     ref.off('end-room-video', endRoomVideo);

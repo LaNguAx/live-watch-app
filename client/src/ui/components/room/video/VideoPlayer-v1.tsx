@@ -3,7 +3,6 @@ import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import YouTubePlayer, { YouTubePlayerHandle } from './YoutubePlayer';
 import { EmitFunction } from '../../../../hooks/useSocket';
 import Button from '../../Button';
-import { seekToTime } from '../../../../store/slices/roomSlice';
 
 interface VideoPlayerProps {
   emitter: EmitFunction;
@@ -14,35 +13,37 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
   const id = useAppSelector((store) => store.room.video.id);
   const videoStatus = useAppSelector((store) => store.room.status);
   const videoTime = useAppSelector((store) => store.room.video.time);
+  const playerRef = useRef<YouTubePlayerHandle>(null);
+  const isSeekingRef = useRef<boolean>(false);
   const dispatch = useAppDispatch();
 
-  const playerRef = useRef<YouTubePlayerHandle>(null);
-  const [duration, setDuration] = useState<number>(0);
+  const [duration, setVideoDuration] = useState<number>(0);
   const [sliderPos, setSliderPos] = useState<number>(0);
-
-  const isSeekingRef = useRef<boolean>(false);
-  const isPausingRef = useRef<boolean>(false);
-  const isPlayingRef = useRef<boolean>(false);
 
   const fmt = (s: number) => new Date(s * 1000).toISOString().substring(14, 19);
 
   useEffect(() => {
-    if (!videoTime) return;
-    isSeekingRef.current = true;
-    playerRef.current?.seekTo(videoTime);
-  }, [videoTime]);
+    // playerRef.current?.seekTo(videoTime);
+    // playerRef.current?.play();
+    // TMRW U HAVE TO FIX THIS WHERE SEEKING SOMEWHERE DOESNT WORK.
+    // ITS BECAUSE SEEKTO GRIGGERS VIDEO PAUSED AND VIDEO PLAYED MULTIPLE TIMES...
+    // maybe use ref to save state when seeking and stop the emit when its happening.s
+    // i tried doing it using video status but utube api is trash.. whenver
+    // u seek somehwere it fires 'pause' then 'start' therefore listening to that event will cause
+    // unnecessary runs of code.
+  }, [videoStatus]);
 
   useEffect(() => {
     if (!playerRef.current) return;
 
-    if (videoStatus === 'waiting') {
-      isPausingRef.current = true;
-      playerRef.current?.pause();
-    }
+    console.log(videoStatus);
     if (videoStatus === 'active') {
-      isPlayingRef.current = true;
+      playerRef.current?.seekTo(videoTime);
+      isSeekingRef.current = true;
       playerRef.current?.play();
+      return;
     }
+    if (videoStatus === 'waiting') playerRef.current?.pause();
   }, [videoStatus]);
 
   // Poll playback time so slider & label stay in sync (mobile‑safe)
@@ -55,6 +56,13 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
     }, 500);
     return () => clearInterval(idt);
   }, []);
+
+  function handleSliderChange(e: any) {
+    const currentSliderPos = Number(e.target.value);
+    setSliderPos(currentSliderPos);
+    isSeekingRef.current = true;
+    playerRef.current?.seekTo(currentSliderPos);
+  }
 
   if (!id) {
     return (
@@ -80,43 +88,33 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
     );
   }
 
-  function handleOnReady() {
-    console.log('Video is ready.');
-    setDuration(playerRef.current?.getDuration() || 1);
+  // 🔁 Programmatic control
+  function handleReady() {
+    console.log('Video is ready');
+    setVideoDuration(playerRef.current?.getDuration() ?? 1);
   }
-  function handleOnPlay() {
+
+  function handlePlay() {
     if (isSeekingRef.current) {
       isSeekingRef.current = false;
       return;
     }
 
-    if (isPlayingRef.current) {
-      isPlayingRef.current = false;
-      return;
-    }
-
-    console.log('Video is playing');
-    const currentTime = playerRef.current?.getCurrentTime?.() ?? 0;
-    emit('play-room-video', { roomId, playTime: currentTime });
+    console.log('Video played');
+    const playTime = playerRef.current?.getCurrentTime();
+    emit('play-room-video', { roomId, playTime });
   }
-  function handleOnPause() {
-    if (isPausingRef.current) {
-      isPausingRef.current = false;
-      return;
-    }
-    console.log('Video is pause');
+
+  function handlePause() {
+    console.log('Video paused');
+    // const pauseTime = playerRef.current?.getCurrentTime();
+    // setCurrentVideoTime(pauseTime);
     emit('pause-room-video', { roomId });
   }
-  function handleOnEnd() {
-    console.log('Video ended');
-  }
 
-  function handleSliderChange(e: any) {
-    const newSliderPos = Number(e.target.value);
-    setSliderPos(newSliderPos);
-    // emit('play-room-video', { roomId, playTime: newSliderPos });
-    dispatch(seekToTime(newSliderPos));
-    emit('seek-room-video', { roomId, time: newSliderPos });
+  function handleEnd() {
+    console.log('Video ended');
+    emit('end-room-video');
   }
 
   return (
@@ -125,19 +123,19 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
         <YouTubePlayer
           ref={playerRef}
           videoId={id}
-          onReady={handleOnReady}
-          onPlay={handleOnPlay}
-          onPause={handleOnPause}
-          onEnd={handleOnEnd}
+          onReady={handleReady}
+          onPlay={handlePlay}
+          onPause={handlePause}
+          onEnd={handleEnd}
         />
       </div>
 
+      {/* Example buttons */}
       <div className="flex gap-4 mt-4 w-full">
         <div className="flex flex-col items-center justify-center gap-2">
           <Button onClick={() => playerRef.current?.play()}>▶️ Play</Button>
           <Button onClick={() => playerRef.current?.pause()}>⏸ Pause</Button>
         </div>
-
         <div className="relative mb-12 w-9/12">
           <label htmlFor="labels-range-input" className="sr-only">
             Labels range
