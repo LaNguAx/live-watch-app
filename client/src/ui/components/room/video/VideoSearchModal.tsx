@@ -17,14 +17,12 @@ export default function VideoSearchModal({
   openModal,
   setOpenModal,
   children,
-  emitter:emit
+  emitter: emit,
 }: VideoSearchModalProps) {
   const searchVideos = useAppSelector((store) => store.room.search.results);
   const searchQuery = useAppSelector((store) => store.room.search.query);
 
   const isSearching = useIsFetching({ queryKey: ['videos', searchQuery] }) > 0;
-  console.log(isSearching);
-  console.log('render');
 
   return (
     <Modal

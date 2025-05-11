@@ -1,4 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useImperativeHandle, forwardRef, Ref } from 'react';
+
+export interface YouTubePlayerHandle {
+  play: () => void;
+  pause: () => void;
+  seekTo: (seconds: number) => void;
+  getCurrentTime: () => number;
+}
 
 interface YouTubePlayerProps {
   videoId: string;
@@ -15,23 +22,26 @@ declare global {
   }
 }
 
-export default function YouTubePlayer({
-  videoId,
-  onReady,
-  onPlay,
-  onPause,
-  onEnd,
-}: YouTubePlayerProps) {
+const YouTubePlayer = forwardRef(function YouTubePlayer(
+  { videoId, onReady, onPlay, onPause, onEnd }: YouTubePlayerProps,
+  ref: Ref<YouTubePlayerHandle>
+) {
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Load IFrame API once and create the player
+  // 👇 Expose methods to parent
+  useImperativeHandle(ref, () => ({
+    play: () => playerRef.current?.playVideo(),
+    pause: () => playerRef.current?.pauseVideo(),
+    seekTo: (seconds: number) => playerRef.current?.seekTo(seconds, true),
+    getCurrentTime: () => playerRef.current?.getCurrentTime() || 0,
+  }));
+
   useEffect(() => {
     if (!window.YT) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
       document.body.appendChild(tag);
-
       window.onYouTubeIframeAPIReady = loadPlayer;
     } else {
       loadPlayer();
@@ -69,9 +79,8 @@ export default function YouTubePlayer({
         playerRef.current = null;
       }
     };
-  }, []); // ⬅️ only run once on mount
+  }, []);
 
-  // ✅ Detect videoId change and load new video
   useEffect(() => {
     if (
       playerRef.current &&
@@ -86,4 +95,6 @@ export default function YouTubePlayer({
       <div ref={containerRef} />
     </div>
   );
-}
+});
+
+export default YouTubePlayer;

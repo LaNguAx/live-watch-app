@@ -15,8 +15,9 @@ export type Video = {
   author: string;
   publishedAt: string;
   description: string;
-  duration:string;
+  duration: string;
   url: string;
+  time: number;
 };
 
 type Search = {
@@ -24,7 +25,7 @@ type Search = {
   query: string;
 };
 
-interface IRoom {
+export interface IRoom {
   roomId: string;
   users: Record<string, IUser>;
   chat: Chat;
@@ -48,8 +49,9 @@ export const initialState: IRoom = {
     author: '',
     publishedAt: '',
     description: '',
-    duration:'',
+    duration: '',
     url: '',
+    time: 0,
   },
   chat: [],
 };
@@ -58,12 +60,16 @@ const roomSlice = createSlice({
   name: 'room',
   initialState,
   reducers: {
-    updateRoom(_state, action: PayloadAction<IRoom>) {
-      return action.payload;
+    updateRoom(state, action: PayloadAction<IRoom>) {
+      return {
+        ...action.payload,
+        search: { results: state.search.results, query: state.search.query },
+      };
     },
     exitRoom(_state) {
       return initialState;
     },
+
     sendMessageToRoom(state, action: PayloadAction<Message>) {
       state.chat.push(action.payload);
     },
@@ -76,6 +82,13 @@ const roomSlice = createSlice({
     setVideo(state, action: PayloadAction<Video>) {
       state.video = action.payload;
     },
+    playVideo(state, action: PayloadAction<number>) {
+      state.video.time = action.payload;
+      state.status = 'active';
+    },
+    pauseVideo(state, action: PayloadAction<string>) {
+      state.status = 'waiting';
+    },
   },
 });
 
@@ -86,5 +99,7 @@ export const {
   setSearchVideos,
   setSearchQuery,
   setVideo,
+  playVideo,
+  pauseVideo,
 } = roomSlice.actions;
 export default roomSlice.reducer;

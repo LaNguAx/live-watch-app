@@ -48,7 +48,11 @@ function Room() {
 
   return (
     <section className="relative bg-white h-screen w-screen p-2">
-      <VideoSearchModal openModal={openModal} setOpenModal={setOpenModal} emitter={emit}>
+      <VideoSearchModal
+        openModal={openModal}
+        setOpenModal={setOpenModal}
+        emitter={emit}
+      >
         <Button
           className="cursor-pointer rounded-full bg-indigo-600 px-4 py-4 text-3xl w-9/12 font-medium text-white hover:bg-indigo-700 transition absolute bottom-3 left-1/2 transform -translate-x-1/2"
           type="button"
@@ -59,7 +63,7 @@ function Room() {
       </VideoSearchModal>
 
       <Layout>
-        <VideoPlayer />
+        <VideoPlayer emitter={emit} />
 
         <SideBar>
           <RoomDetails>
