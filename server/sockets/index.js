@@ -11,6 +11,7 @@ export default function setupSocketHandlers(io) {
   // Create a fresh room state
   function createRoomState() {
     return {
+      roomId: "",
       users: new Map(),
       chat: [],
       status: "waiting",
@@ -23,6 +24,7 @@ export default function setupSocketHandlers(io) {
         description: "",
         duration: "",
         url: "",
+        time: 0,
       },
     };
   }
@@ -79,22 +81,28 @@ export default function setupSocketHandlers(io) {
       // const { name } = user;
       // Add user to rooms cache
       const state = rooms.get(roomId) || createRoomState();
+      state.roomId = roomId;
       state.users.set(socket.id, user);
       rooms.set(roomId, state);
-      console.log(state);
       // join the Socket.IO room (Adapter events handle rooms Map)
       socket.join(roomId);
 
       // immediately broadcast the full room state
       // const state = rooms.get(roomId) || createRoomState();
-      io.in(roomId).emit("update-room", {
-        roomId,
-        users: Object.fromEntries(state.users),
-        chat: state.chat,
-        status: state.status,
-      });
+      io.in(roomId).emit("update-room", { ...state, users: Object.fromEntries(state.users) });
+    });
 
-      if (state.video.id) io.in(roomId).emit("set-video-room", { video: state.video });
+    socket.on("leave-room", ({ roomId }, ack) => {
+      // leave the Socket.IO room (Adapter will fire its leave-room event)
+      socket.leave(roomId);
+
+      // broadcast updated state to remaining clients
+      const state = rooms.get(roomId);
+      if (state) {
+        io.in(roomId).emit("update-room", { ...state, users: Object.fromEntries(state.users) });
+      }
+
+      if (typeof ack === "function") ack();
     });
 
     socket.on("send-message", ({ roomId, message }) => {
@@ -115,8 +123,6 @@ export default function setupSocketHandlers(io) {
 
       state.chat.push(returnMessage);
       io.in(roomId).emit("send-message", { message: returnMessage });
-
-      console.log(state.chat);
     });
 
     // socket.on("get-users-in-room", ({ roomId }) => {
@@ -127,32 +133,27 @@ export default function setupSocketHandlers(io) {
     //   });
     // });
 
-    socket.on("leave-room", ({ roomId }, ack) => {
-      // leave the Socket.IO room (Adapter will fire its leave-room event)
-      socket.leave(roomId);
-
-      // broadcast updated state to remaining clients
-      const state = rooms.get(roomId);
-      if (state) {
-        io.in(roomId).emit("update-room", {
-          roomId,
-          users: Object.fromEntries(state.users),
-          chat: state.chat,
-          status: state.status,
-          video: state.video,
-        });
-      }
-
-      if (state.video.id) io.in(roomId).emit("set-video-room", { video: state.video });
-
-      if (typeof ack === "function") ack();
-    });
-
     /** ROOM HANDLERS START */
     socket.on("set-room-video", ({ roomId, video }) => {
+      // console.log(video);
       const state = rooms.get(roomId);
-      state.video = { ...video };
+      console.log(state);
+      state.video = video;
       io.in(roomId).emit("set-room-video", { video });
+    });
+
+    socket.on("play-room-video", ({ roomId, playTime }) => {
+      const state = rooms.get(roomId);
+
+      console.log(state.video.time, playTime);
+      state.video.time = playTime;
+      // change to socket.in later...
+      socket.in(roomId).emit("play-room-video", { playTime });
+    });
+
+    socket.on("pause-room-video", ({ roomId }) => {
+      // change to socket.in later...
+      socket.in(roomId).emit("pause-room-video", { roomId });
     });
 
     /** ROOM HANDLERS END */
@@ -173,12 +174,7 @@ export default function setupSocketHandlers(io) {
         // broadcast updated state to remaining clients
         const state = rooms.get(roomId);
         if (state) {
-          io.in(roomId).emit("update-room", {
-            roomId,
-            users: Object.fromEntries(state.users),
-            chat: state.chat,
-            status: state.status,
-          });
+          io.in(roomId).emit("update-room", { ...state, users: Object.fromEntries(state.users) });
         }
       }
     });

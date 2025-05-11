@@ -6,7 +6,7 @@ export default function Chat() {
   const chat: ChatType = useAppSelector((store) => store.room.chat);
 
   const userNames = Object.values(users).map(({ name }, _i) => (
-    <span key={_i}>
+    <span key={`${name}${_i}`}>
       🧑&nbsp;<span>{name}</span>
       <br />
     </span>
