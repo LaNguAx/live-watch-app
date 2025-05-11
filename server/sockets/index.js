@@ -14,7 +14,7 @@ export default function setupSocketHandlers(io) {
       roomId: "",
       users: new Map(),
       chat: [],
-      status: "waiting",
+      status: "",
       video: {
         id: "",
         title: "",
@@ -154,6 +154,12 @@ export default function setupSocketHandlers(io) {
     socket.on("pause-room-video", ({ roomId }) => {
       // change to socket.in later...
       socket.in(roomId).emit("pause-room-video", { roomId });
+    });
+
+    socket.on("seek-room-video", ({ roomId, time }) => {
+      const state = rooms.get(roomId);
+      state.video.time = time;
+      socket.in(roomId).emit("seek-room-video", { time });
     });
 
     /** ROOM HANDLERS END */
