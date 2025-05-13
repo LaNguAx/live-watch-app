@@ -125,19 +125,10 @@ export default function setupSocketHandlers(io) {
       io.in(roomId).emit("send-message", { message: returnMessage });
     });
 
-    // socket.on("get-users-in-room", ({ roomId }) => {
-    //   const state = rooms.get(roomId);
-    //   socket.emit("get-users-in-room", {
-    //     roomId,
-    //     users: state ? Array.from(state.users) : [],
-    //   });
-    // });
 
     /** ROOM HANDLERS START */
     socket.on("set-room-video", ({ roomId, video }) => {
-      // console.log(video);
       const state = rooms.get(roomId);
-      console.log(state);
       state.video = video;
       io.in(roomId).emit("set-room-video", { video });
     });
@@ -145,7 +136,6 @@ export default function setupSocketHandlers(io) {
     socket.on("play-room-video", ({ roomId, playTime }) => {
       const state = rooms.get(roomId);
 
-      console.log(state.video.time, playTime);
       state.video.time = playTime;
       // change to socket.in later...
       socket.in(roomId).emit("play-room-video", { playTime });
@@ -160,6 +150,11 @@ export default function setupSocketHandlers(io) {
       const state = rooms.get(roomId);
       state.video.time = time;
       socket.in(roomId).emit("seek-room-video", { time });
+    });
+    socket.on("save-watch-time", ({ roomId, time }) => {
+      const state = rooms.get(roomId);
+      if (!state) return;
+      state.video.time = time; // update the cached current video time
     });
 
     /** ROOM HANDLERS END */

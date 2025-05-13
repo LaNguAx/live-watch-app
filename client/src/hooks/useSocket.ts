@@ -24,25 +24,6 @@ export function useSocket(roomId: string) {
   const socketRef = useRef<Socket>(socket);
   const dispatch = useAppDispatch();
 
-  // const updateRoom = useCallback(
-  //   ({
-  //     roomId,
-  //     users,
-  //     chat,
-  //     status,
-  //   }: {
-  //     roomId: string;
-  //     users: Record<string, IUser>;
-  //     chat: Message[];
-  //     status: 'waiting' | 'active';
-  //   }) => {
-  //     console.log(roomId, users, status, chat);
-  //     dispatch(
-  //       updateUserRoom({roomId, users, status, chat })
-  //     );
-  //   },
-  //   []
-  // );
   const updateRoom = useCallback((room: IRoom) => {
     dispatch(updateUserRoom(room));
   }, []);
@@ -82,10 +63,10 @@ export function useSocket(roomId: string) {
     ref.on('send-message', sendMessage);
     ref.on('set-room-video', setRoomVideo);
   }, []);
-
+  
   const stopListeners = useCallback(() => {
     const { current: ref } = socketRef;
-
+    
     ref.off('seek-room-video', seekRoomVideo);
     ref.off('play-room-video', playRoomVideo);
     ref.off('pause-room-video', pauseRoomVideo);
