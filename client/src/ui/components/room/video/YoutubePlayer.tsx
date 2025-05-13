@@ -6,6 +6,8 @@ export interface YouTubePlayerHandle {
   seekTo: (seconds: number) => void;
   getCurrentTime: () => number;
   getDuration: () => number;
+  unMute: () => void;
+  mute: () => void;
 }
 
 interface YouTubePlayerProps {
@@ -14,6 +16,7 @@ interface YouTubePlayerProps {
   onPlay?: () => void;
   onPause?: () => void;
   onEnd?: () => void;
+  isMuted: boolean;
 }
 
 declare global {
@@ -24,7 +27,7 @@ declare global {
 }
 
 const YouTubePlayer = forwardRef(function YouTubePlayer(
-  { videoId, onReady, onPlay, onPause, onEnd }: YouTubePlayerProps,
+  { videoId, onReady, onPlay, onPause, onEnd, isMuted }: YouTubePlayerProps,
   ref: Ref<YouTubePlayerHandle>
 ) {
   const playerRef = useRef<any>(null);
@@ -37,6 +40,8 @@ const YouTubePlayer = forwardRef(function YouTubePlayer(
     seekTo: (seconds: number) => playerRef.current?.seekTo(seconds, true),
     getCurrentTime: () => playerRef.current?.getCurrentTime() || 0,
     getDuration: () => playerRef.current?.getDuration() || 0,
+    unMute: () => playerRef.current?.unMute(),
+    mute: () => playerRef.current?.mute(),
   }));
 
   useEffect(() => {
@@ -57,15 +62,17 @@ const YouTubePlayer = forwardRef(function YouTubePlayer(
         width: '100%',
         videoId,
         playerVars: {
-          controls: 0, // ❌ Hides the player controls (play, pause, etc.)
-          modestbranding: 1, // ✅ Removes the YouTube logo (mostly)
-          rel: 0, // ✅ Prevents showing related videos at the end
-          showinfo: 0, // ✅ Deprecated, no longer needed
-          fs: 0, // ❌ Disable fullscreen button
-          iv_load_policy: 3, // ✅ Hide annotations
-          disablekb: 1, // ✅ Disable keyboard controls
-          mute: 1,
+          controls: 0, 
+          modestbranding: 1, 
+          rel: 0, 
+          showinfo: 0, 
+          fs: 0,
+          iv_load_policy: 3, 
+          disablekb: 1,
+          mute: +isMuted,
         },
+
+        // FIX SOUND IT DOESNT WORK
         events: {
           onReady: () => onReady?.(),
           onStateChange: (event: any) => {

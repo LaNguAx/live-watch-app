@@ -13,7 +13,6 @@ export async function fetchVideos(query: string) {
     }
 
     const data = await response.json();
-    // console.log('🎥 Fetched videos:', data);
     return data;
   } catch (error) {
     console.error('❌ fetchVideos error:', error);

@@ -4,6 +4,7 @@ import YouTubePlayer, { YouTubePlayerHandle } from './YoutubePlayer';
 import { EmitFunction } from '../../../../hooks/useSocket';
 import Button from '../../Button';
 import { seekToTime } from '../../../../store/slices/roomSlice';
+import { fmt, timeStringToSeconds } from '../../../../utils/time';
 
 interface VideoPlayerProps {
   emitter: EmitFunction;
@@ -13,25 +14,28 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
   const roomId = useAppSelector((store) => store.room.roomId);
   const id = useAppSelector((store) => store.room.video.id);
   const videoStatus = useAppSelector((store) => store.room.status);
+  const videoDuration = useAppSelector((store) => store.room.video.duration);
   const videoTime = useAppSelector((store) => store.room.video.time);
   const dispatch = useAppDispatch();
 
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const [duration, setDuration] = useState<number>(0);
   const [sliderPos, setSliderPos] = useState<number>(0);
+  const [playerReady, setPlayerReady] = useState<boolean>(false);
 
   const isSeekingRef = useRef<boolean>(false);
   const isPausingRef = useRef<boolean>(false);
+  const isTriggerPause = useRef<boolean>(false);
   const isPlayingRef = useRef<boolean>(false);
-
-  const fmt = (s: number) => new Date(s * 1000).toISOString().substring(14, 19);
+  const [isMute, setIsMute] = useState<boolean>(true);
 
   useEffect(() => {
-    if (!videoTime) return;
-    isSeekingRef.current = true;
-    playerRef.current?.seekTo(videoTime);
-    setSliderPos(videoTime);
-  }, [videoTime]);
+    if (!playerReady || !id) return;
+    setSliderPos(0); // reset slider UI
+    setDuration(
+      playerRef.current?.getDuration() || timeStringToSeconds(videoDuration)
+    );
+  }, [videoDuration, playerReady, id]);
 
   useEffect(() => {
     if (!playerRef.current) return;
@@ -39,6 +43,8 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
     if (videoStatus === 'waiting') {
       isPausingRef.current = true;
       playerRef.current?.pause();
+      // const currentTime = playerRef.current?.getCurrentTime?.();
+      // emit('save-watch-time', { roomId, time: currentTime });
     }
     if (videoStatus === 'active') {
       isPlayingRef.current = true;
@@ -46,9 +52,31 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
     }
   }, [videoStatus]);
 
+  useEffect(() => {
+    if (!videoTime) return;
+
+    if (!isTriggerPause.current) isSeekingRef.current = true;
+    playerRef.current?.seekTo(videoTime);
+
+    setSliderPos(videoTime);
+  }, [videoTime, playerReady, videoStatus]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const currentTime = playerRef.current?.getCurrentTime?.();
+      emit('save-watch-time', { roomId, time: currentTime });
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   // Poll playback time so slider & label stay in sync (mobile‑safe)
   useEffect(() => {
-    if (!playerRef.current) return;
+    if (!playerReady) return;
 
     const idt = setInterval(() => {
       const t = playerRef.current?.getCurrentTime?.() ?? 0;
@@ -56,7 +84,7 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
     }, 500);
 
     return () => clearInterval(idt);
-  }, [playerRef.current]);
+  }, [playerReady, videoTime]);
 
   if (!id) {
     return (
@@ -85,6 +113,7 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
   function handleOnReady() {
     console.log('Video is ready.');
     setDuration(playerRef.current?.getDuration() || 1);
+    setPlayerReady(true);
   }
   function handleOnPlay() {
     if (isSeekingRef.current) {
@@ -107,10 +136,21 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
       return;
     }
     console.log('Video is pause');
+    isTriggerPause.current = true;
     emit('pause-room-video', { roomId });
   }
   function handleOnEnd() {
     console.log('Video ended');
+  }
+
+  function handleMute() {
+    if (isMute) {
+      playerRef.current?.unMute();
+      setIsMute(false);
+    } else {
+      playerRef.current?.mute();
+      setIsMute(true);
+    }
   }
 
   function handleSliderChange(e: any) {
@@ -131,34 +171,52 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
           onPlay={handleOnPlay}
           onPause={handleOnPause}
           onEnd={handleOnEnd}
+          isMuted={isMute}
         />
       </div>
 
-      <div className="flex gap-4 mt-4 w-full">
-        <div className="flex flex-col items-center justify-center gap-2">
+      <div className="flex flex-col">
+        <div className="flex gap-4 mt-4 w-full ">
+          <div className="relative mb-7 w-full px-5 mx-auto">
+            <label htmlFor="labels-range-input" className="sr-only">
+              Labels range
+            </label>
+            <input
+              id="labels-range-input"
+              type="range"
+              value={sliderPos}
+              min={0}
+              max={duration || 1}
+              onChange={handleSliderChange}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+            />
+            <div className="">
+              <span className=" ml-5 text-sm text-gray-500 dark:text-gray-400 absolute start-0 -bottom-6">
+                ({fmt(sliderPos)})
+              </span>
+              <span className="mr-5 text-sm text-gray-500 dark:text-gray-400 absolute end-0 -bottom-6">
+                ({fmt(duration)})
+              </span>
+            </div>
+          </div>
+        </div>
+        <p className="px-5 mb-2 text-xs text-center">
+          {isMute ? (
+            <>
+              <span>Video is muted.</span>
+              <br />
+              <span>Please unmute to hear something.</span>
+            </>
+          ) : (
+            ''
+          )}
+        </p>
+        <div className="flex  items-center justify-center gap-2">
           <Button onClick={() => playerRef.current?.play()}>▶️ Play</Button>
           <Button onClick={() => playerRef.current?.pause()}>⏸ Pause</Button>
-        </div>
-
-        <div className="relative mb-12 w-9/12">
-          <label htmlFor="labels-range-input" className="sr-only">
-            Labels range
-          </label>
-          <input
-            id="labels-range-input"
-            type="range"
-            value={sliderPos}
-            min={0}
-            max={duration || 1}
-            onChange={handleSliderChange}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-          />
-          <span className="text-sm text-gray-500 dark:text-gray-400 absolute start-0 -bottom-6">
-            (00:00)
-          </span>
-          <span className="text-sm text-gray-500 dark:text-gray-400 absolute end-0 -bottom-6">
-            ({fmt(duration)})
-          </span>
+          <Button onClick={handleMute}>
+            {isMute ? `🔊 Unmute` : `🔈 Mute`}
+          </Button>
         </div>
       </div>
     </div>
