@@ -23,16 +23,18 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
   const [duration, setDuration] = useState<number>(0);
   const [sliderPos, setSliderPos] = useState<number>(0);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
-
-  const isSeekingRef = useRef<boolean>(false);
-  const isPausingRef = useRef<boolean>(false);
-  const isTriggerPause = useRef<boolean>(false);
-  const isPlayingRef = useRef<boolean>(false);
   const [isMute, setIsMute] = useState<boolean>(true);
+
+  const statusRef = useRef({
+    seeking: false,
+    pausing: false,
+    playing: false,
+    triggerPause: false,
+  });
 
   useEffect(() => {
     if (!playerReady || !id) return;
-    setSliderPos(0); // reset slider UI
+    setSliderPos(0);
     setDuration(
       playerRef.current?.getDuration() || timeStringToSeconds(videoDuration)
     );
@@ -42,22 +44,23 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
     if (!playerRef.current) return;
 
     if (videoStatus === 'waiting') {
-      isPausingRef.current = true;
-      playerRef.current?.pause();
-    }
-    if (videoStatus === 'active') {
-      isPlayingRef.current = true;
-      playerRef.current?.play();
+      statusRef.current.pausing = true;
+      playerRef.current.pause();
+    } else if (videoStatus === 'active') {
+      statusRef.current.playing = true;
+      playerRef.current.play();
     }
   }, [videoStatus]);
 
   useEffect(() => {
-    if (!videoTime) return;
+    if (!videoTime || !playerRef.current) return;
 
-    if (!isTriggerPause.current) isSeekingRef.current = true;
-    playerRef.current?.seekTo(videoTime);
-
+    if (!statusRef.current.triggerPause) {
+      statusRef.current.seeking = true;
+    }
+    playerRef.current.seekTo(videoTime);
     setSliderPos(videoTime);
+    statusRef.current.triggerPause = false; // reset
   }, [videoTime, playerReady, videoStatus]);
 
   useEffect(() => {
@@ -67,110 +70,82 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
 
-  // Poll playback time so slider & label stay in sync (mobile‑safe)
   useEffect(() => {
     if (!playerReady) return;
 
-    const idt = setInterval(() => {
-      const t = playerRef.current?.getCurrentTime?.() ?? 0;
-      setSliderPos(t);
-    }, 500);
+    const interval = setInterval(() => {
+      const current = playerRef.current?.getCurrentTime?.() ?? 0;
+      setSliderPos(current);
 
-    return () => clearInterval(idt);
-  }, [playerReady, videoTime]);
+      if (isUserHost) {
+        emit('save-watch-time', { roomId, time: current });
+      }
+    }, 1000);
 
-  useEffect(() => {
-    if (!playerReady || !isUserHost) return;
+    return () => clearInterval(interval);
+  }, [playerReady, isUserHost]);
 
-    const idt = setInterval(() => {
-      const t = playerRef.current?.getCurrentTime?.() ?? 0;
-      emit('save-watch-time', { roomId, time: t });
-    }, 500);
+  const handleOnReady = () => {
+    setDuration(playerRef.current?.getDuration() || 1);
+    setPlayerReady(true);
+  };
 
-    return () => clearInterval(idt);
-  }, [playerReady, videoTime]);
+  const handleOnPlay = () => {
+    if (statusRef.current.seeking) {
+      statusRef.current.seeking = false;
+      return;
+    }
+    if (statusRef.current.playing) {
+      statusRef.current.playing = false;
+      return;
+    }
+    const currentTime = playerRef.current?.getCurrentTime?.() ?? 0;
+    emit('play-room-video', { roomId, playTime: currentTime });
+  };
 
-  console.log(isUserHost);
+  const handleOnPause = () => {
+    if (statusRef.current.pausing) {
+      statusRef.current.pausing = false;
+      return;
+    }
+    statusRef.current.triggerPause = true;
+    emit('pause-room-video', { roomId });
+  };
+
+  const handleOnEnd = () => {
+    console.log('Video ended');
+  };
+
+  const handleMute = () => {
+    if (isMute) {
+      playerRef.current?.unMute();
+    } else {
+      playerRef.current?.mute();
+    }
+    setIsMute(!isMute);
+  };
+
+  const handleSliderChange = (e: any) => {
+    const newSliderPos = Number(e.target.value);
+    setSliderPos(newSliderPos);
+    dispatch(seekToTime(newSliderPos));
+    emit('seek-room-video', { roomId, time: newSliderPos });
+  };
 
   if (!id) {
     return (
       <div className="flex flex-col items-center justify-center h-60 text-center text-gray-500 border border-dashed border-gray-300 rounded-xl p-6">
-        <svg
-          className="w-12 h-12 mb-4 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.5}
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M15.75 9V5.25M8.25 9V5.25M3.375 9h17.25m-4.125 4.5v5.25m-9.75-5.25v5.25M12 15.75v5.25"
-          />
-        </svg>
         <p className="text-lg font-medium">No video selected</p>
         <p className="text-sm text-gray-400 mt-1">
           Search and choose a video to start watching
         </p>
       </div>
     );
-  }
-
-  function handleOnReady() {
-    console.log('Video is ready.');
-    setDuration(playerRef.current?.getDuration() || 1);
-    setPlayerReady(true);
-  }
-  function handleOnPlay() {
-    if (isSeekingRef.current) {
-      isSeekingRef.current = false;
-      return;
-    }
-
-    if (isPlayingRef.current) {
-      isPlayingRef.current = false;
-      return;
-    }
-
-    console.log('Video is playing');
-    const currentTime = playerRef.current?.getCurrentTime?.() ?? 0;
-    emit('play-room-video', { roomId, playTime: currentTime });
-  }
-  function handleOnPause() {
-    if (isPausingRef.current) {
-      isPausingRef.current = false;
-      return;
-    }
-    console.log('Video is pause');
-    isTriggerPause.current = true;
-    emit('pause-room-video', { roomId });
-  }
-  function handleOnEnd() {
-    console.log('Video ended');
-  }
-
-  function handleMute() {
-    if (isMute) {
-      playerRef.current?.unMute();
-      setIsMute(false);
-    } else {
-      playerRef.current?.mute();
-      setIsMute(true);
-    }
-  }
-
-  function handleSliderChange(e: any) {
-    const newSliderPos = Number(e.target.value);
-    setSliderPos(newSliderPos);
-    // emit('play-room-video', { roomId, playTime: newSliderPos });
-    dispatch(seekToTime(newSliderPos));
-    emit('seek-room-video', { roomId, time: newSliderPos });
   }
 
   return (
@@ -188,13 +163,9 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
       </div>
 
       <div className="flex flex-col">
-        <div className="flex gap-4 mt-4 w-full ">
+        <div className="flex gap-4 mt-4 w-full">
           <div className="relative mb-7 w-full px-5 mx-auto">
-            <label htmlFor="labels-range-input" className="sr-only">
-              Labels range
-            </label>
             <input
-              id="labels-range-input"
               type="range"
               value={sliderPos}
               min={0}
@@ -202,32 +173,26 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
               onChange={handleSliderChange}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
             />
-            <div className="">
-              <span className=" ml-5 text-sm text-gray-500 dark:text-gray-400 absolute start-0 -bottom-6">
-                ({fmt(sliderPos)})
-              </span>
-              <span className="mr-5 text-sm text-gray-500 dark:text-gray-400 absolute end-0 -bottom-6">
-                ({fmt(duration)})
-              </span>
+            <div className="flex justify-between text-sm text-gray-500 mt-2">
+              <span>{fmt(sliderPos)}</span>
+              <span>{fmt(duration)}</span>
             </div>
           </div>
         </div>
-        <p className="px-5 mb-2 text-xs text-center">
-          {isMute ? (
-            <>
-              <span>Video is muted.</span>
-              <br />
-              <span>Please unmute to hear something.</span>
-            </>
-          ) : (
-            ''
-          )}
-        </p>
-        <div className="flex  items-center justify-center gap-2">
+
+        {isMute && (
+          <p className="px-5 mb-2 text-xs text-center text-gray-400">
+            <span>Video is muted.</span>
+            <br />
+            <span>Please unmute to hear something.</span>
+          </p>
+        )}
+
+        <div className="flex items-center justify-center gap-2">
           <Button onClick={() => playerRef.current?.play()}>▶️ Play</Button>
           <Button onClick={() => playerRef.current?.pause()}>⏸ Pause</Button>
           <Button onClick={handleMute}>
-            {isMute ? `🔊 Unmute` : `🔈 Mute`}
+            {isMute ? '🔊 Unmute' : '🔈 Mute'}
           </Button>
         </div>
       </div>

@@ -2,13 +2,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface IUser {
   name: string;
-  // isHost: boolean;
+  isHost: boolean;
   // inRoom: string | null;
 }
 
 const initialState: IUser = {
   name: 'Itay',
-  // isHost: true,
+  isHost: false,
   // inRoom: '',
 };
 
@@ -19,9 +19,9 @@ const userSlice = createSlice({
     setName(state, action: PayloadAction<string>) {
       state.name = action.payload;
     },
-    // setIsHost(state, action: PayloadAction<boolean>) {
-    //   state.isHost = action.payload;
-    // },
+    setIsHost(state, action: PayloadAction<boolean>) {
+      state.isHost = action.payload;
+    },
     // setRoom(state, action: PayloadAction<string | null>) {
     //   state.inRoom = action.payload;
     // },
@@ -31,5 +31,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { setName } = userSlice.actions;
+export const { setName, setIsHost } = userSlice.actions;
 export default userSlice.reducer;

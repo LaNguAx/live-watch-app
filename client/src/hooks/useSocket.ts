@@ -13,6 +13,7 @@ import {
   Video,
 } from '../store/slices/roomSlice';
 import { Message } from '../store/slices/roomSlice';
+import { setIsHost } from '../store/slices/userSlice';
 
 export type EmitFunction = <T = any>(
   event: string,
@@ -52,9 +53,14 @@ export function useSocket(roomId: string) {
     dispatch(seekToTime(time));
   }, []);
 
+  const setRoomHost = useCallback(() => {
+    dispatch(setIsHost(true));
+  }, []);
+
   const startListeners = useCallback(() => {
     const { current: ref } = socketRef;
 
+    ref.on('set-room-host', setRoomHost);
     ref.on('seek-room-video', seekRoomVideo);
     ref.on('play-room-video', playRoomVideo);
     ref.on('pause-room-video', pauseRoomVideo);
@@ -63,10 +69,11 @@ export function useSocket(roomId: string) {
     ref.on('send-message', sendMessage);
     ref.on('set-room-video', setRoomVideo);
   }, []);
-  
+
   const stopListeners = useCallback(() => {
     const { current: ref } = socketRef;
-    
+
+    ref.off('set-room-host', setRoomHost);
     ref.off('seek-room-video', seekRoomVideo);
     ref.off('play-room-video', playRoomVideo);
     ref.off('pause-room-video', pauseRoomVideo);
