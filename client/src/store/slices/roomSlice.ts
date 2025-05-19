@@ -61,6 +61,7 @@ const roomSlice = createSlice({
   initialState,
   reducers: {
     updateRoom(state, action: PayloadAction<IRoom>) {
+      console.log(action.payload)
       return {
         ...action.payload,
         search: { results: state.search.results, query: state.search.query },

@@ -82,7 +82,12 @@ export default function setupSocketHandlers(io) {
       // Add user to rooms cache
       const state = rooms.get(roomId) || createRoomState();
       state.roomId = roomId;
-      state.users.set(socket.id, user);
+      if (state.users.size === 0) {
+        console.log("test");
+        state.users.set(socket.id, { name: user.name, isHost: true });
+        socket.emit("set-room-host");
+      } else state.users.set(socket.id, user);
+
       rooms.set(roomId, state);
       // join the Socket.IO room (Adapter events handle rooms Map)
       socket.join(roomId);
@@ -124,7 +129,6 @@ export default function setupSocketHandlers(io) {
       state.chat.push(returnMessage);
       io.in(roomId).emit("send-message", { message: returnMessage });
     });
-
 
     /** ROOM HANDLERS START */
     socket.on("set-room-video", ({ roomId, video }) => {

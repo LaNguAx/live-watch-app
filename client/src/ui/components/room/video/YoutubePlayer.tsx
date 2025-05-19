@@ -35,13 +35,13 @@ const YouTubePlayer = forwardRef(function YouTubePlayer(
 
   // 👇 Expose methods to parent
   useImperativeHandle(ref, () => ({
-    play: () => playerRef.current?.playVideo(),
-    pause: () => playerRef.current?.pauseVideo(),
-    seekTo: (seconds: number) => playerRef.current?.seekTo(seconds, true),
-    getCurrentTime: () => playerRef.current?.getCurrentTime() || 0,
-    getDuration: () => playerRef.current?.getDuration() || 0,
-    unMute: () => playerRef.current?.unMute(),
-    mute: () => playerRef.current?.mute(),
+    play: () => playerRef.current?.playVideo?.(),
+    pause: () => playerRef.current?.pauseVideo?.(),
+    seekTo: (seconds: number) => playerRef.current?.seekTo?.(seconds, true),
+    getCurrentTime: () => playerRef.current?.getCurrentTime?.() || 0,
+    getDuration: () => playerRef.current?.getDuration?.() || 0,
+    unMute: () => playerRef.current?.unMute?.(),
+    mute: () => playerRef.current?.mute?.(),
   }));
 
   useEffect(() => {
@@ -62,12 +62,12 @@ const YouTubePlayer = forwardRef(function YouTubePlayer(
         width: '100%',
         videoId,
         playerVars: {
-          controls: 0, 
-          modestbranding: 1, 
-          rel: 0, 
-          showinfo: 0, 
+          controls: 0,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
           fs: 0,
-          iv_load_policy: 3, 
+          iv_load_policy: 3,
           disablekb: 1,
           mute: +isMuted,
         },
