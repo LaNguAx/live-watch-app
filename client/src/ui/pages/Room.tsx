@@ -56,7 +56,7 @@ function Room() {
   }
 
   return (
-    <section className="relative bg-white h-screen w-screen p-2 lg:p-4 overflow-hidden max-w-full">
+    <section className="relative bg-white min-h-screen w-screen p-2 lg:p-4 max-w-full">
       <VideoSearchModal
         openModal={openModal}
         setOpenModal={setOpenModal}
