@@ -133,32 +133,100 @@ export default function setupSocketHandlers(io) {
     /** ROOM HANDLERS START */
     socket.on("set-room-video", ({ roomId, video }) => {
       const state = rooms.get(roomId);
-      state.video = video;
-      io.in(roomId).emit("set-room-video", { video });
+      if (!state) return;
+
+      // Reset video state when new video is set
+      state.video = { ...video, time: 0 };
+      state.status = "waiting"; // Always start in waiting state
+
+      // Broadcast to all clients including sender for consistency
+      io.in(roomId).emit("set-room-video", { video: state.video });
+      io.in(roomId).emit("update-room", { ...state, users: Object.fromEntries(state.users) });
     });
 
     socket.on("play-room-video", ({ roomId, playTime }) => {
       const state = rooms.get(roomId);
+      if (!state) return;
 
+      // Update server state with current time and playing status
       state.video.time = playTime;
-      // change to socket.in later...
-      socket.in(roomId).emit("play-room-video", { playTime });
+      state.status = "active";
+
+      // Broadcast current server state to ensure everyone is in sync
+      const syncData = {
+        playTime: state.video.time,
+        status: state.status,
+        timestamp: Date.now(), // Add timestamp for sync validation
+      };
+
+      socket.in(roomId).emit("play-room-video", syncData);
+      io.in(roomId).emit("update-room", { ...state, users: Object.fromEntries(state.users) });
     });
 
-    socket.on("pause-room-video", ({ roomId }) => {
-      // change to socket.in later...
-      socket.in(roomId).emit("pause-room-video", { roomId });
-    });
-
-    socket.on("seek-room-video", ({ roomId, time }) => {
+    socket.on("pause-room-video", ({ roomId, currentTime }) => {
       const state = rooms.get(roomId);
-      state.video.time = time;
-      socket.in(roomId).emit("seek-room-video", { time });
+      if (!state) return;
+
+      // Update server state with pause time and status
+      if (currentTime !== undefined) {
+        state.video.time = currentTime;
+      }
+      state.status = "waiting";
+
+      const syncData = {
+        pauseTime: state.video.time,
+        status: state.status,
+        timestamp: Date.now(),
+      };
+
+      socket.in(roomId).emit("pause-room-video", syncData);
+      io.in(roomId).emit("update-room", { ...state, users: Object.fromEntries(state.users) });
     });
+
+    socket.on("seek-room-video", ({ roomId, time, shouldPlay }) => {
+      const state = rooms.get(roomId);
+      if (!state) return;
+
+      // Update server state
+      state.video.time = time;
+      // Preserve playing state unless explicitly changed
+      if (shouldPlay !== undefined) {
+        state.status = shouldPlay ? "active" : "waiting";
+      }
+
+      const syncData = {
+        time: state.video.time,
+        status: state.status,
+        timestamp: Date.now(),
+      };
+
+      socket.in(roomId).emit("seek-room-video", syncData);
+      io.in(roomId).emit("update-room", { ...state, users: Object.fromEntries(state.users) });
+    });
+
     socket.on("save-watch-time", ({ roomId, time }) => {
       const state = rooms.get(roomId);
       if (!state) return;
-      state.video.time = time; // update the cached current video time
+
+      // Only update time if video is playing (to prevent drift during pause)
+      if (state.status === "active") {
+        state.video.time = time;
+      }
+    });
+
+    // New handler for requesting current sync state
+    socket.on("request-sync", ({ roomId }) => {
+      const state = rooms.get(roomId);
+      if (!state) return;
+
+      const syncData = {
+        video: state.video,
+        status: state.status,
+        timestamp: Date.now(),
+        authoritative: true, // Mark as authoritative server state
+      };
+
+      socket.emit("sync-response", syncData);
     });
 
     /** ROOM HANDLERS END */

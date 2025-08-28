@@ -28,8 +28,6 @@ export default function VideoSearchBar({
   ): Promise<void> {
     e.preventDefault();
 
-    console.log(query);
-
     if (query.trim() === '' || !query) {
       setShowEmptyQueryMessage(true);
       setTimeout(() => setShowEmptyQueryMessage(false), 3000);

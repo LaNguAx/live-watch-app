@@ -32,6 +32,7 @@ export interface IRoom {
   search: Search;
   video: Video;
   status: 'waiting' | 'active' | '';
+  lastSyncTimestamp?: number;
 }
 
 export const initialState: IRoom = {
@@ -61,10 +62,11 @@ const roomSlice = createSlice({
   initialState,
   reducers: {
     updateRoom(state, action: PayloadAction<IRoom>) {
-      console.log(action.payload)
+      console.log(action.payload);
       return {
         ...action.payload,
         search: { results: state.search.results, query: state.search.query },
+        lastSyncTimestamp: Date.now(),
       };
     },
     exitRoom(_state) {
@@ -92,6 +94,16 @@ const roomSlice = createSlice({
     },
     seekToTime(state, action: PayloadAction<number>) {
       state.video.time = action.payload;
+      state.lastSyncTimestamp = Date.now();
+    },
+    syncVideoState(
+      state,
+      action: PayloadAction<{ video: Video; status: string; timestamp: number }>
+    ) {
+      const { video, status, timestamp } = action.payload;
+      state.video = video;
+      state.status = status as 'waiting' | 'active' | '';
+      state.lastSyncTimestamp = timestamp;
     },
   },
 });
@@ -106,5 +118,6 @@ export const {
   playVideo,
   pauseVideo,
   seekToTime,
+  syncVideoState,
 } = roomSlice.actions;
 export default roomSlice.reducer;

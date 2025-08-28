@@ -6,7 +6,7 @@ import { exitRoom } from '../../store/slices/roomSlice';
 
 import VideoSearchModal from '../components/room/video/VideoSearchModal';
 import Layout from '../components/room/Layout';
-import VideoPlayer from '../components/room/video/VideoPlayer--v2';
+import VideoPlayer from '../components/room/video/VideoPlayer--v3';
 import SideBar from '../components/room/SideBar';
 import RoomDetails from '../components/room/details/RoomDetails';
 import RoomHeader from '../components/room/details/RoomHeader';

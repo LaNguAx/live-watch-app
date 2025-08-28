@@ -10,6 +10,7 @@ import {
   sendMessageToRoom,
   setVideo,
   updateRoom as updateUserRoom,
+  syncVideoState,
   Video,
 } from '../store/slices/roomSlice';
 import { Message } from '../store/slices/roomSlice';
@@ -26,37 +27,105 @@ export function useSocket(roomId: string) {
   const dispatch = useAppDispatch();
   const [isConnected, setIsConnected] = useState(socket.connected);
 
-  const updateRoom = useCallback((room: IRoom) => {
-    dispatch(updateUserRoom(room));
-  }, []);
+  const updateRoom = useCallback(
+    (room: IRoom) => {
+      dispatch(updateUserRoom(room));
+    },
+    [dispatch]
+  );
 
-  const sendMessage = useCallback(({ message }: { message: Message }) => {
-    dispatch(sendMessageToRoom(message));
-  }, []);
+  const sendMessage = useCallback(
+    ({ message }: { message: Message }) => {
+      dispatch(sendMessageToRoom(message));
+    },
+    [dispatch]
+  );
 
-  const setRoomVideo = useCallback(({ video }: { video: Video }) => {
-    dispatch(setVideo(video));
-  }, []);
+  const setRoomVideo = useCallback(
+    ({ video }: { video: Video }) => {
+      dispatch(setVideo(video));
+    },
+    [dispatch]
+  );
 
-  const playRoomVideo = useCallback(({ playTime }: { playTime: number }) => {
-    dispatch(playVideo(playTime));
-  }, []);
+  const playRoomVideo = useCallback(
+    ({
+      playTime,
+    }: {
+      playTime: number;
+      status?: string;
+      timestamp?: number;
+    }) => {
+      dispatch(playVideo(playTime));
+    },
+    [dispatch]
+  );
 
-  const pauseRoomVideo = useCallback(({ roomId }: { roomId: string }) => {
-    dispatch(pauseVideo(roomId));
-  }, []);
+  const pauseRoomVideo = useCallback(
+    ({
+      pauseTime,
+    }: {
+      pauseTime: number;
+      status?: string;
+      timestamp?: number;
+    }) => {
+      if (pauseTime !== undefined) {
+        dispatch(seekToTime(pauseTime));
+      }
+      dispatch(pauseVideo(''));
+    },
+    [dispatch]
+  );
 
-  const endRoomVideo = useCallback(({ video }: { video: Video }) => {
-    dispatch(setVideo(video));
-  }, []);
+  const endRoomVideo = useCallback(
+    ({ video }: { video: Video }) => {
+      dispatch(setVideo(video));
+    },
+    [dispatch]
+  );
 
-  const seekRoomVideo = useCallback(({ time }: { time: number }) => {
-    dispatch(seekToTime(time));
-  }, []);
+  const seekRoomVideo = useCallback(
+    ({
+      time,
+      status,
+    }: {
+      time: number;
+      status?: string;
+      timestamp?: number;
+    }) => {
+      dispatch(seekToTime(time));
+      // Update status if provided
+      if (status === 'active') {
+        dispatch(playVideo(time));
+      } else if (status === 'waiting') {
+        dispatch(pauseVideo(''));
+      }
+    },
+    [dispatch]
+  );
+
+  const handleSyncResponse = useCallback(
+    ({
+      video,
+      status,
+      timestamp,
+      authoritative,
+    }: {
+      video: Video;
+      status: string;
+      timestamp: number;
+      authoritative: boolean;
+    }) => {
+      if (authoritative) {
+        dispatch(syncVideoState({ video, status, timestamp }));
+      }
+    },
+    [dispatch]
+  );
 
   const setRoomHost = useCallback(() => {
     dispatch(setIsHost(true));
-  }, []);
+  }, [dispatch]);
 
   const startListeners = useCallback(() => {
     const { current: ref } = socketRef;
@@ -69,7 +138,18 @@ export function useSocket(roomId: string) {
     ref.on('update-room', updateRoom);
     ref.on('send-message', sendMessage);
     ref.on('set-room-video', setRoomVideo);
-  }, []);
+    ref.on('sync-response', handleSyncResponse);
+  }, [
+    setRoomHost,
+    seekRoomVideo,
+    playRoomVideo,
+    pauseRoomVideo,
+    endRoomVideo,
+    updateRoom,
+    sendMessage,
+    setRoomVideo,
+    handleSyncResponse,
+  ]);
 
   const stopListeners = useCallback(() => {
     const { current: ref } = socketRef;
@@ -82,7 +162,18 @@ export function useSocket(roomId: string) {
     ref.off('update-room', updateRoom);
     ref.off('send-message', sendMessage);
     ref.off('set-room-video', setRoomVideo);
-  }, []);
+    ref.off('sync-response', handleSyncResponse);
+  }, [
+    setRoomHost,
+    seekRoomVideo,
+    playRoomVideo,
+    pauseRoomVideo,
+    endRoomVideo,
+    updateRoom,
+    sendMessage,
+    setRoomVideo,
+    handleSyncResponse,
+  ]);
 
   const socketDispatcher: EmitFunction = useCallback(
     (event, payload, callback) => {
@@ -117,7 +208,7 @@ export function useSocket(roomId: string) {
     return () => {
       stopListeners();
     };
-  }, [roomId]);
+  }, [startListeners, stopListeners]);
 
   return { socket: socketRef.current, emit: socketDispatcher, isConnected };
 }
