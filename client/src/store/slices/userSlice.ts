@@ -7,7 +7,7 @@ export interface IUser {
 }
 
 const initialState: IUser = {
-  name: 'Itay',
+  name: '',
   isHost: false,
   // inRoom: '',
 };
