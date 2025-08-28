@@ -1,5 +1,3 @@
-import Spinner from './Spinner';
-
 interface ConnectionLoadingProps {
   className?: string;
 }
@@ -28,8 +26,8 @@ export default function ConnectionLoading({
             Please wait while we connect to the server.
             <br />
             <span className="text-indigo-700 font-medium">
-              The server may be asleep because it's on a free plan and could take
-              up to a minute to wake up.
+              The server may be asleep because it's on a free plan and could
+              take up to a minute to wake up.
             </span>
           </p>
 
