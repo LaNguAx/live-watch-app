@@ -47,7 +47,7 @@ function Room() {
   }
 
   return (
-    <section className="relative bg-white h-screen w-screen p-2">
+    <section className="relative bg-white h-screen w-screen p-2 lg:p-4 overflow-hidden max-w-full">
       <VideoSearchModal
         openModal={openModal}
         setOpenModal={setOpenModal}
@@ -63,24 +63,30 @@ function Room() {
       </VideoSearchModal>
 
       <Layout>
-        <VideoPlayer emitter={emit} />
+        {/* Video Player - Takes remaining space after sidebar */}
+        <div className="flex-1 min-w-0">
+          <VideoPlayer emitter={emit} />
+        </div>
 
-        <SideBar>
-          <RoomDetails>
-            <RoomHeader roomId={roomId} />
-            <VideoSearchBar handleSearchModal={handleSearch} />
-          </RoomDetails>
+        {/* Sidebar - Fixed width on desktop, full width on mobile */}
+        <div className="w-full lg:w-80 flex-shrink-0">
+          <SideBar>
+            <RoomDetails>
+              <RoomHeader roomId={roomId} />
+              <VideoSearchBar handleSearchModal={handleSearch} />
+            </RoomDetails>
 
-          <Chat />
-          <SendChatMessage toChatRoom={roomId} emitter={emit} />
+            <Chat />
+            <SendChatMessage toChatRoom={roomId} emitter={emit} />
 
-          <Button
-            onClick={handleLeaveRoom}
-            className=" cursor-pointer w-full rounded-full border border-red-500 px-4 py-2 text-red-500 hover:bg-red-500 hover:text-white transition text-lg mt-auto"
-          >
-            Leave Room
-          </Button>
-        </SideBar>
+            <Button
+              onClick={handleLeaveRoom}
+              className=" cursor-pointer w-full rounded-full border border-red-500 px-4 py-2 text-red-500 hover:bg-red-500 hover:text-white transition text-lg mt-auto"
+            >
+              Leave Room
+            </Button>
+          </SideBar>
+        </div>
       </Layout>
     </section>
   );

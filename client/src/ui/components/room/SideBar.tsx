@@ -6,6 +6,8 @@ interface SideBarProps {
 
 export default function SideBar({ children }: SideBarProps) {
   return (
-    <div className="md:col-span-1 h-full flex flex-col gap-2">{children}</div>
+    <div className="h-full flex flex-col gap-4 lg:gap-2 lg:min-h-0">
+      {children}
+    </div>
   );
 }

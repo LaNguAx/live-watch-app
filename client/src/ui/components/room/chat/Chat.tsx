@@ -13,7 +13,7 @@ export default function Chat() {
   ));
 
   return (
-    <article className="relative w-full flex flex-col justify-between rounded-[10px] border border-gray-200 bg-white h-80 sm:h-96 overflow-hidden">
+    <article className="relative w-full flex flex-col justify-between rounded-[10px] border border-gray-200 bg-white h-60 lg:h-80 lg:flex-1 lg:min-h-0 overflow-hidden">
       <div className="overflow-y-auto px-3 py-2 flex-1">
         {chat.map((message) => (
           <p className="text-lg font-light tracking-wider">

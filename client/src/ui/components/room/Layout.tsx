@@ -6,8 +6,8 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div className="mx-auto max-w-screen-xl">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:items-center md:gap-8">
+    <div className="h-full w-full max-w-full overflow-hidden">
+      <div className="flex flex-col lg:flex-row h-full gap-4 lg:gap-6 max-w-full">
         {children}
       </div>
     </div>

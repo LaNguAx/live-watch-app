@@ -139,18 +139,20 @@ export default function VideoPlayer({ emitter: emit }: VideoPlayerProps) {
 
   if (!id) {
     return (
-      <div className="flex flex-col items-center justify-center h-60 text-center text-gray-500 border border-dashed border-gray-300 rounded-xl p-6">
-        <p className="text-lg font-medium">No video selected</p>
-        <p className="text-sm text-gray-400 mt-1">
-          Search and choose a video to start watching
-        </p>
+      <div className="w-full h-full flex flex-col">
+        <div className="aspect-video w-full flex flex-col items-center justify-center text-center text-gray-500 border border-dashed border-gray-300 rounded-xl p-6">
+          <p className="text-lg font-medium">No video selected</p>
+          <p className="text-sm text-gray-400 mt-1">
+            Search and choose a video to start watching
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full">
-      <div className="aspect-video">
+    <div className="w-full h-full flex flex-col">
+      <div className="aspect-video w-full flex-shrink-0">
         <YouTubePlayer
           ref={playerRef}
           videoId={id}
