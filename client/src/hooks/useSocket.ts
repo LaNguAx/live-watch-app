@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { socket } from '../sockets/sockets';
 import { Socket } from 'socket.io-client';
 import { useAppDispatch } from '../store/hooks';
@@ -24,6 +24,7 @@ export type EmitFunction = <T = any>(
 export function useSocket(roomId: string) {
   const socketRef = useRef<Socket>(socket);
   const dispatch = useAppDispatch();
+  const [isConnected, setIsConnected] = useState(socket.connected);
 
   const updateRoom = useCallback((room: IRoom) => {
     dispatch(updateUserRoom(room));
@@ -93,10 +94,19 @@ export function useSocket(roomId: string) {
   useEffect(() => {
     const ref = socketRef.current;
 
+    // Set up connection event listeners
+    const onConnect = () => setIsConnected(true);
+    const onDisconnect = () => setIsConnected(false);
+
+    ref.on('connect', onConnect);
+    ref.on('disconnect', onDisconnect);
+
     if (!ref.connected) ref.connect();
 
     return () => {
       console.log('Component unmounting..');
+      ref.off('connect', onConnect);
+      ref.off('disconnect', onDisconnect);
       ref.emit('leave-room', { roomId }, () => ref.disconnect());
     };
   }, [roomId]);
@@ -109,5 +119,5 @@ export function useSocket(roomId: string) {
     };
   }, [roomId]);
 
-  return { socket: socketRef.current, emit: socketDispatcher };
+  return { socket: socketRef.current, emit: socketDispatcher, isConnected };
 }

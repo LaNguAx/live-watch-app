@@ -14,13 +14,14 @@ import VideoSearchBar from '../components/room/video/VideoSearchBar';
 import Chat from '../components/room/chat/Chat';
 import SendChatMessage from '../components/room/chat/SendChatMessage';
 import Button from '../components/Button';
+import ConnectionLoading from '../components/ConnectionLoading';
 
 function Room() {
   const { roomId } = useParams<{ roomId: string }>();
   if (!roomId) throw new Error('Missing roomId in URL');
   const [openModal, setOpenModal] = useState(false);
 
-  const { emit } = useSocket(roomId);
+  const { emit, isConnected } = useSocket(roomId);
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -28,13 +29,16 @@ function Room() {
   const userName = useAppSelector((store) => store.user.name);
 
   useEffect(() => {
-    emit('join-room', {
-      roomId,
-      user: {
-        name: userName,
-      },
-    });
-  }, []);
+    // Only emit join-room when socket is connected
+    if (isConnected) {
+      emit('join-room', {
+        roomId,
+        user: {
+          name: userName,
+        },
+      });
+    }
+  }, [isConnected, roomId, userName, emit]);
 
   function handleLeaveRoom() {
     navigate('/');
@@ -44,6 +48,11 @@ function Room() {
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setOpenModal(true);
+  }
+
+  // Show connection loading screen if socket is not connected
+  if (!isConnected) {
+    return <ConnectionLoading />;
   }
 
   return (
